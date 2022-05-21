@@ -61,13 +61,11 @@ namespace Tetris
             Color.Red
         };
 
-
-
         string output = String.Empty;
         public bool isPress = false;
         private GameState gameState = new GameState();
         private GH_Markup[,] imageControls;
-
+        private GH_Scribble scoreText;
         public async override void AddedToDocument(GH_Document document)
         {
             base.AddedToDocument(document);
@@ -126,6 +124,7 @@ namespace Tetris
 
         private GH_Markup[,] SetupGameCanvas(GameGrid grid)
         {
+            //设置网格
             GH_Markup[,] imageControls = new GH_Markup[grid.Rows, grid.Columns];
             int cellSize = 50;
             for (int r = 0; r < grid.Rows; r++)
@@ -140,6 +139,15 @@ namespace Tetris
             {
                 doc.AddObject(comp, false);
             }
+            //设置分数
+            scoreText = new GH_Scribble();
+            scoreText.CreateAttributes();
+            scoreText.Attributes.Pivot=new PointF(300, 100);
+            scoreText.Font= GH_FontServer.NewFont(GH_FontServer.Script.FontFamily, 40f, FontStyle.Bold);
+            scoreText.NickName = "ScoreComponent";
+            scoreText.Text = "Score : " + gameState.Score.ToString();
+            doc.AddObject(scoreText, false);
+
             return imageControls;
         }
 
@@ -147,7 +155,7 @@ namespace Tetris
         {
             //markup is not ActiveObject!
             //var obj=doc.ActiveObjects();
-            List<IGH_DocumentObject> markupList = doc.Objects.Where(x => x.GetType() == typeof(GH_Markup)).ToList();
+            List<IGH_DocumentObject> markupList = doc.Objects.Where(x => x.GetType() == typeof(GH_Markup)||x.GetType()==typeof(GH_Scribble)).ToList();
             doc.RemoveObjects(markupList, true);
         }
 
@@ -201,11 +209,14 @@ namespace Tetris
             DrawGhostBlock(gameState.CurrentBlock);
             DrawBlock(gameState.CurrentBlock);
 
+            //DrawNextBlock(gameState.BlockQueue);
+
+            scoreText.Text = "Score : " + gameState.Score.ToString();
+            scoreText.Attributes.ExpireLayout();
+            scoreText.OnDisplayExpired(true);
+
             //终于解决了画面更新的问题
             Instances.RedrawAll();
-
-            //DrawNextBlock(gameState.BlockQueue);
-            //ScoreText.Text = $"Score: {gameState.Score}";
         }
 
         private void DrawGhostBlock(Block block)
@@ -338,18 +349,6 @@ namespace Tetris
                     return;
             }
             Draw(gameState);
-
-
-
-        }
-
-        private void GhKeyIsString(IGH_DocumentObject sender, GH_SolutionExpiredEventArgs e)
-        {
-            if (gameState.GameOver)
-            {
-                return;
-            }
-
         }
 
         /// <summary>
