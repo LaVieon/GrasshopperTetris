@@ -23,6 +23,13 @@ namespace Tetris
                 yield return new Position(p.Row + offset.Row, p.Column + offset.Column);
             }
         }
+        public IEnumerable<Position> TilePositionsInNext()
+        {
+            foreach (Position p in Tiles[rotationState])
+            {
+                yield return new Position(p.Row, p.Column);
+            }
+        }
 
         public void RotateCW()
         {

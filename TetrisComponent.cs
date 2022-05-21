@@ -65,13 +65,14 @@ namespace Tetris
         public bool isPress = false;
         private GameState gameState = new GameState();
         private GH_Markup[,] imageControls;
+        private GH_Markup[,] nextBlockCells;
+        private GH_Scribble nextText;
         private GH_Scribble scoreText;
         public async override void AddedToDocument(GH_Document document)
         {
             base.AddedToDocument(document);
             imageControls = SetupGameCanvas(gameState.GameGrid);
             await GameLoop();
-
         }
 
 
@@ -82,10 +83,10 @@ namespace Tetris
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            string control=string.Empty;
-            DA.GetData("control",ref control);
+            string control = string.Empty;
+            DA.GetData("control", ref control);
             //由于expire机制,所以这里需要先去除订阅,再增加事件订阅
-            if (control=="")
+            if (control == "")
             {
                 Message = "Inside Control Mode";
                 Instances.DocumentEditor.KeyDown -= this.GhKeydown;
@@ -97,8 +98,6 @@ namespace Tetris
                 Instances.DocumentEditor.KeyDown -= this.GhKeydown;
                 ParseControl(control);
             }
-
-
 
             DA.SetData(0, output);
         }
@@ -124,6 +123,7 @@ namespace Tetris
 
         private GH_Markup[,] SetupGameCanvas(GameGrid grid)
         {
+            var doc = OnPingDocument();
             //设置网格
             GH_Markup[,] imageControls = new GH_Markup[grid.Rows, grid.Columns];
             int cellSize = 50;
@@ -134,19 +134,43 @@ namespace Tetris
                     imageControls[r, c] = ConstructGrid(cellSize, 150 + c * cellSize, 150 + r * cellSize, tileImages[0]);
                 }
             }
-            var doc = OnPingDocument();
             foreach (var comp in imageControls)
             {
                 doc.AddObject(comp, false);
             }
+
             //设置分数
             scoreText = new GH_Scribble();
             scoreText.CreateAttributes();
-            scoreText.Attributes.Pivot=new PointF(300, 100);
-            scoreText.Font= GH_FontServer.NewFont(GH_FontServer.Script.FontFamily, 40f, FontStyle.Bold);
-            scoreText.NickName = "ScoreComponent";
+            scoreText.Attributes.Pivot = new PointF(300, 100);
+            scoreText.Font = GH_FontServer.NewFont(GH_FontServer.Script.FontFamily, 40f, FontStyle.Bold);
+            scoreText.NickName = "ScoreText";
             scoreText.Text = "Score : " + gameState.Score.ToString();
             doc.AddObject(scoreText, false);
+
+            //设置NextBlockCells
+            nextBlockCells = new GH_Markup[4, 4];
+            for (int r = 0; r < nextBlockCells.GetLength(0); r++)
+            {
+                for (int c = 0; c < nextBlockCells.GetLength(1); c++)
+                {
+                    nextBlockCells[r, c] = ConstructGrid(cellSize, 750 + c * cellSize, 450 + r * cellSize, tileImages[0]);
+                }
+            }
+            foreach (var comp in nextBlockCells)
+            {
+                doc.AddObject(comp, false);
+            }
+
+
+            //设置Next
+            nextText = new GH_Scribble();
+            nextText.CreateAttributes();
+            nextText.Attributes.Pivot = new PointF(800, 400);
+            nextText.Font = GH_FontServer.NewFont(GH_FontServer.Script.FontFamily, 40f, FontStyle.Bold);
+            nextText.NickName = "NextText";
+            nextText.Text = "Next";
+            doc.AddObject(nextText, false);
 
             return imageControls;
         }
@@ -155,7 +179,7 @@ namespace Tetris
         {
             //markup is not ActiveObject!
             //var obj=doc.ActiveObjects();
-            List<IGH_DocumentObject> markupList = doc.Objects.Where(x => x.GetType() == typeof(GH_Markup)||x.GetType()==typeof(GH_Scribble)).ToList();
+            List<IGH_DocumentObject> markupList = doc.Objects.Where(x => x.GetType() == typeof(GH_Markup) || x.GetType() == typeof(GH_Scribble)).ToList();
             doc.RemoveObjects(markupList, true);
         }
 
@@ -209,7 +233,7 @@ namespace Tetris
             DrawGhostBlock(gameState.CurrentBlock);
             DrawBlock(gameState.CurrentBlock);
 
-            //DrawNextBlock(gameState.BlockQueue);
+            DrawNextBlock(gameState.BlockQueue);
 
             scoreText.Text = "Score : " + gameState.Score.ToString();
             scoreText.Attributes.ExpireLayout();
@@ -217,6 +241,25 @@ namespace Tetris
 
             //终于解决了画面更新的问题
             Instances.RedrawAll();
+        }
+
+        private void DrawNextBlock(BlockQueue blockQueue)
+        {
+            //setup next cells
+            for (int r = 0; r < nextBlockCells.GetLength(0); r++)
+            {
+                for (int c = 0; c < nextBlockCells.GetLength(1); c++)
+                {
+                    bool isChangedColor = ChangeCellColor(ref nextBlockCells[r, c], tileImages[0]);
+                }
+            }
+            //Draw next block
+            Block next = blockQueue.NextBlock;
+            var test = next.TilePositionsInNext();
+            foreach (Position p in next.TilePositionsInNext())
+            {
+                bool isChangedColor = ChangeCellColor(ref nextBlockCells[p.Row, p.Column], tileImages[next.Id]);
+            }
         }
 
         private void DrawGhostBlock(Block block)
