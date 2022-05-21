@@ -210,16 +210,8 @@ namespace Tetris
 
             foreach (Position p in block.TilePositions())
             {
-                //imageControls[p.Row + dropDistance, p.Column].Opacity = 0.25;
-                //imageControls[p.Row + dropDistance, p.Column].Source = tileImages[block.Id];
                 Color ghostColor = GetGhostColor(tileImages[block.Id]);
                 bool isChangedColor = ChangeCellColor(ref imageControls[p.Row + dropDistance, p.Column], ghostColor);
-                //if (isChangedColor)
-                //{
-                //    imageControls[p.Row + dropDistance, p.Column].Attributes.ExpireLayout();
-                //}
-
-
             }
         }
 
@@ -237,18 +229,7 @@ namespace Tetris
         {
             foreach (Position p in block.TilePositions())
             {
-                //imageControls[p.Row, p.Column].Opacity = 1;
-                //imageControls[p.Row, p.Column].Source = tileImages[block.Id];
                 bool isChangedColor = ChangeCellColor(ref imageControls[p.Row, p.Column], tileImages[block.Id]);
-                //if (isChangedColor)
-                //{
-                //    //imageControls[p.Row, p.Column].Attributes.PerformLayout();
-                //    imageControls[p.Row, p.Column].Attributes.ExpireLayout();
-                //    //imageControls[p.Row, p.Column].ExpireSolution(false);
-                //    imageControls[p.Row, p.Column].ExpirePreview(true);
-
-                //}
-
             }
         }
 
@@ -260,11 +241,6 @@ namespace Tetris
                 {
                     int id = grid[r, c];
                     bool isChangedColor = ChangeCellColor(ref imageControls[r, c], tileImages[id]);
-                    //if (isChangedColor)
-                    //{
-                    //    //imageControls[r, c].Attributes.PerformLayout();
-                    //    //imageControls[r, c].Attributes.ExpireLayout();
-                    //}
                 }
             }
         }
