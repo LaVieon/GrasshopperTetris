@@ -42,7 +42,7 @@ namespace Tetris
         {
             pManager.AddTextParameter("string", "string", "", GH_ParamAccess.item);
         }
-        string output=String.Empty;
+        string output = String.Empty;
         public bool isPress = false;
 
         /// <summary>
@@ -64,27 +64,40 @@ namespace Tetris
         {
 
             this.isPress = false;
-            bool flag2 = e.Control && e.KeyCode==Keys.Right;
-            if (e.Control && e.KeyCode!=0)
+            //var controlKeys=new List<Keys> { Keys.Left,Keys.Right,Keys.Down,Keys.Up};
+            //bool flag2 = e.Control && e.KeyCode == Keys.Right;
+            if (e.Control && e.KeyCode!=Keys.ControlKey)
             {
                 switch (e.KeyCode)
                 {
                     case Keys.Left:
-                        output = "<-\n";
+                        output = "Left";
                         break;
                     case Keys.Right:
-                        output = "->\n";
-                        break ;
-                    //default:
-                    //    return;
+                        output = "Right";
+                        break;
+                    case Keys.Down:
+                        output = "Down";
+                        break;
+                    case Keys.Up:
+                        output = "Up";
+                        break;
+                    case Keys.Home:
+                        output = "Home";
+                        break;
+                    case Keys.End:
+                        output = "Drop";
+                        break;
+                    default:
+                        return;
                 }
                 this.isPress = true;
+                ExpireSolution(true);
             }
-            if (e.Control&&e.Alt)
+            if (e.Control && e.Alt)
             {
                 output = String.Empty;
             }
-            ExpireSolution(true);
 
         }
 

@@ -68,10 +68,12 @@ namespace Tetris
         private GameState gameState = new GameState();
         private GH_Markup[,] imageControls;
 
-        public override void AddedToDocument(GH_Document document)
+        public async override void AddedToDocument(GH_Document document)
         {
             base.AddedToDocument(document);
             imageControls = SetupGameCanvas(gameState.GameGrid);
+            await GameLoop();
+
         }
 
 
@@ -80,22 +82,24 @@ namespace Tetris
         /// </summary>
         /// <param name="DA">The DA object can be used to retrieve data from input parameters and 
         /// to store data in output parameters.</param>
-        protected async override void SolveInstance(IGH_DataAccess DA)
+        protected override void SolveInstance(IGH_DataAccess DA)
         {
             string control=string.Empty;
             DA.GetData("control",ref control);
             //由于expire机制,所以这里需要先去除订阅,再增加事件订阅
-            if (string.IsNullOrEmpty(control))
+            if (control=="")
             {
+                Message = "Inside Control Mode";
                 Instances.DocumentEditor.KeyDown -= this.GhKeydown;
                 Instances.DocumentEditor.KeyDown += this.GhKeydown;
             }
-            else if (control=="->")
+            else
             {
-                gameState.MoveBlockRight();
+                Message = "Remote Control Mode";
+                Instances.DocumentEditor.KeyDown -= this.GhKeydown;
+                ParseControl(control);
             }
 
-            await GameLoop();
 
 
             DA.SetData(0, output);
@@ -300,6 +304,43 @@ namespace Tetris
                     return;
             }
             Draw(gameState);
+        }
+        private void ParseControl(string control)
+        {
+            if (gameState.GameOver)
+            {
+                return;
+            }
+            switch (control)
+            {
+                case "Left":
+                    gameState.MoveBlockLeft();
+                    break;
+                case "Right":
+                    gameState.MoveBlockRight();
+                    break;
+                case "Down":
+                    gameState.MoveBlockDown();
+                    break;
+                case "Up":
+                    gameState.RotateBlockCW();
+                    break;
+                case "Home":
+                    gameState.RotateBlockCCW();
+                    break;
+                case "Drop":
+                    gameState.DropBlock();
+                    break;
+                //case Keys.Delete:
+                //    gameState.Pause = !gameState.Pause;
+                //    break;
+                default:
+                    return;
+            }
+            Draw(gameState);
+
+
+
         }
 
         private void GhKeyIsString(IGH_DocumentObject sender, GH_SolutionExpiredEventArgs e)
