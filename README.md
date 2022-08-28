@@ -8,11 +8,15 @@
 2. Drag gha file into grasshopper canvas
 
 ## Control
-You control it with keyboard.  
+You control it with keyboard.  or hand gesture.  
+For keyboard:
 Directions = ctrl + directions，  
 End = drop block down.
 
+
 ## Hand gesture control
 upload later
+
+
 
 Have Fun!
