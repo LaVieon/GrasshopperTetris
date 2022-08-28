@@ -1,13 +1,13 @@
 ﻿using Grasshopper;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Special;
 using Rhino.Geometry;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
-using Grasshopper.Kernel.Special;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 
 // In order to load the result of this wizard, you will also need to
@@ -38,7 +38,8 @@ namespace Tetris
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddTextParameter("control", "control", "", GH_ParamAccess.item, "");
+            pManager.AddTextParameter("control", "control", "Input control string:\ndirections=ctrl+directions\nhome=counter CW\nend=Drop\ndelete=pause", GH_ParamAccess.item, "");
+            //added restart feature in to right click button event
             //pManager.AddBooleanParameter("restart", "restart", "", GH_ParamAccess.item,false);
         }
 
@@ -72,7 +73,7 @@ namespace Tetris
         {
             base.AddedToDocument(document);
             imageControls = SetupGameCanvas(gameState.GameGrid);
-            await GameLoop();
+            await GameLoop(document);
         }
 
 
@@ -85,7 +86,7 @@ namespace Tetris
         {
             string control = string.Empty;
             DA.GetData("control", ref control);
-            //由于expire机制,所以这里需要先去除订阅,再增加事件订阅
+            //Due to the EXPIRE mechanism, the subscription needs to be removed first, and then the event subscription needs to be added.
             if (control == "")
             {
                 Message = "Inside Control Mode";
@@ -112,19 +113,19 @@ namespace Tetris
                 gameState = new GameState();
                 RemoveExpiredGrid(OnPingDocument());
                 imageControls = SetupGameCanvas(gameState.GameGrid);
-
             });
         }
         public override void RemovedFromDocument(GH_Document document)
         {
             base.RemovedFromDocument(document);
             RemoveExpiredGrid(document);
+
         }
 
         private GH_Markup[,] SetupGameCanvas(GameGrid grid)
         {
             var doc = OnPingDocument();
-            //设置网格
+            //Setup Grid
             GH_Markup[,] imageControls = new GH_Markup[grid.Rows, grid.Columns];
             int cellSize = 50;
             for (int r = 0; r < grid.Rows; r++)
@@ -139,7 +140,7 @@ namespace Tetris
                 doc.AddObject(comp, false);
             }
 
-            //设置分数
+            //Setup Score
             scoreText = new GH_Scribble();
             scoreText.CreateAttributes();
             scoreText.Attributes.Pivot = new PointF(300, 100);
@@ -148,7 +149,7 @@ namespace Tetris
             scoreText.Text = "Score : " + gameState.Score.ToString();
             doc.AddObject(scoreText, false);
 
-            //设置NextBlockCells
+            //Setup NextBlockCells
             nextBlockCells = new GH_Markup[4, 4];
             for (int r = 0; r < nextBlockCells.GetLength(0); r++)
             {
@@ -163,7 +164,7 @@ namespace Tetris
             }
 
 
-            //设置Next
+            //Setup Next
             nextText = new GH_Scribble();
             nextText.CreateAttributes();
             nextText.Attributes.Pivot = new PointF(800, 400);
@@ -194,25 +195,21 @@ namespace Tetris
             markGrid.Marks.Add(markLine);
             markGrid.Attributes.Pivot = new PointF(0, 0);
             ChangeCellColor(ref markGrid, color, width);
-            //var attributes = (GH_MarkupAttributes)markGrid.Attributes;
-            //var prop= new GH_MarkupProperties();
-            //prop.Width = width;
-            //prop.Colour= color;
-            //attributes.Properties= prop;
             markGrid.Attributes.Pivot = new PointF(pivotX, pivotY);
 
             return markGrid;
         }
 
-        private async Task GameLoop()
+        private async Task GameLoop(GH_Document document)
         {
             Draw(gameState);
 
             while (!gameState.GameOver)
             {
+                //change delay to set level of difficulty
                 int delay = 500;
                 await Task.Delay(delay);
-                //后续加入暂停功能
+                //add Pause feature later
                 //if (gameState.Pause)
                 //{
                 //    await Task.Delay(2000);
@@ -222,14 +219,30 @@ namespace Tetris
                 Draw(gameState);
             }
 
-            //GameOverMenu.Visibility = Visibility.Visible;
-            //FinalScoreText.Text = $"Score: {gameState.Score}";
+            //if the component has been removed, Game over should not displayed 
+            List<IGH_DocumentObject> tetrisComponents = document.Objects.Where(x => x.GetType() == typeof(TetrisComponent)).ToList();
+            if (tetrisComponents.Count > 0)
+            {
+                bool isThisCompInDoc = false;
+                foreach (var item in tetrisComponents)
+                {
+                    if (item.InstanceGuid == this.InstanceGuid)
+                    {
+                        isThisCompInDoc = true;
+                        break;
+                    }
+                }
+                if (isThisCompInDoc)
+                {
+                    MessageBox.Show("Game Over!\nScore : " + gameState.Score.ToString());
+                }
+            }
         }
 
         private void Draw(GameState gameState)
         {
             DrawGrid(gameState.GameGrid);
-            //先画ghostBlock,这样GhostBlock会在Block的后面
+            //It's Painter Mode,Draw ghostBlock first,so that the GhostBlock will be behind the Block
             DrawGhostBlock(gameState.CurrentBlock);
             DrawBlock(gameState.CurrentBlock);
 
@@ -239,13 +252,13 @@ namespace Tetris
             scoreText.Attributes.ExpireLayout();
             scoreText.OnDisplayExpired(true);
 
-            //终于解决了画面更新的问题
+            //Update Screen Display,Important
             Instances.RedrawAll();
         }
 
         private void DrawNextBlock(BlockQueue blockQueue)
         {
-            //setup next cells
+            //Setup next cells
             for (int r = 0; r < nextBlockCells.GetLength(0); r++)
             {
                 for (int c = 0; c < nextBlockCells.GetLength(1); c++)
@@ -278,7 +291,7 @@ namespace Tetris
             Color result = color;
             if (color.A > 100)
             {
-                result = Color.FromArgb(100, color);
+                result = Color.FromArgb(70, color);
             }
             return result;
         }
@@ -402,9 +415,7 @@ namespace Tetris
         {
             get
             {
-                // You can add image files to your project resources and access them like this:
                 return Properties.Resources.T;
-                //return null;
             }
         }
 

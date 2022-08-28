@@ -42,7 +42,7 @@
 
         private bool BlockFits()
         {
-            //判断是否可以容纳这个块,可以容纳则为true
+            //Determine whether the block can be accommodated, and true if it can be accommodated
             foreach (Position p in CurrentBlock.TilePositions())
             {
                 if (!GameGrid.IsEmpty(p.Row, p.Column))
@@ -54,6 +54,7 @@
             return true;
         }
 
+        //Temporarily disable this feature
         //public void HoldBlock()
         //{
         //    if (!CanHold)

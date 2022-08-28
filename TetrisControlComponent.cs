@@ -40,7 +40,7 @@ namespace Tetris
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddTextParameter("string", "string", "", GH_ParamAccess.item);
+            pManager.AddTextParameter("string", "string", "Parse Keyboard input.\nIt can be understood as the interface left by the extensibility", GH_ParamAccess.item);
         }
         string output = String.Empty;
         public bool isPress = false;
@@ -52,7 +52,6 @@ namespace Tetris
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            //由于expire机制,所以这里需要先去除订阅,再增加事件订阅
             Instances.DocumentEditor.KeyDown -= this.GhKeydown;
             Instances.DocumentEditor.KeyDown += this.GhKeydown;
 
@@ -109,8 +108,6 @@ namespace Tetris
         {
             get
             {
-                // You can add image files to your project resources and access them like this:
-                //return Resources.IconForThisComponent;
                 return null;
             }
         }
