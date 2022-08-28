@@ -12,4 +12,7 @@ You control it with keyboard.
 Directions = ctrl + directions，  
 End = drop block down.
 
+## Hand gesture control
+upload later
+
 Have Fun!
