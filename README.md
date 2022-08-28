@@ -9,7 +9,7 @@
 
 ## Control
 You control it with keyboard.  or hand gesture.  
-For keyboard:
+For keyboard:  
 Directions = ctrl + directions，  
 End = drop block down.
 
